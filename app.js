@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const owner = require('./Owner');
+const owner = require('./models/Owner');
 const mongoose = require('mongoose');
 mongoose.connect('mongodb+srv://Harshal:C9I9FqPUb0vPsejN@cluster0.imc6gc6.mongodb.net/RoomSystem?retryWrites=true&w=majority')
 
