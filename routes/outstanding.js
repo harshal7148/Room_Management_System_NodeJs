@@ -2,20 +2,19 @@ const express = require('express');
 const router = express.Router();
 const Outstanding = require('../models/outstanding');
 const tenant = require('../models/tenant');
-router.get('', (req, res) => {
+
+router.get('', async(req, res) => {
     let details = [];
-    Outstanding.find({}).then(results => {
-        results.forEach(element => {
-            tenant.findOne({ _id: element.tenantId }).then(data => {
+    Outstanding.find({}).then(async results => {
+        for(const element of results){
+            await tenant.findOne({ _id: element.tenantId }).then(data => {
                 details.push({
                     name: data.name,
                     amount: element.amount
                 })
             });
-        });
-        setTimeout(() => {
-            res.json(details);
-        }, 100);
+        }
+        res.json(details);
     })
 });
 
