@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-var bodyParser = require('body-parser');
-var jsonParser = bodyParser.json();
 const owner = require("../models/owner");
 var key = 'password';
 var algo = 'aes256';
@@ -12,7 +10,7 @@ const jwt = require('jsonwebtoken');
 jwtKey = "jwt";
 //
 
-router.post('', jsonParser, async(req, res) => {
+router.post('', async(req, res) => {
     try {
         const data = await owner.findOne({ name: req.body.name });
         console.log(data)
@@ -29,9 +27,6 @@ router.post('', jsonParser, async(req, res) => {
         } else {
             res.status(401).json("Password not match")
         }
-        // .then((data) => {
-
-        // }).catch(error => res.json(error))
     } catch (error) {
         return res.status(500).send({ message: error.message });
     }
