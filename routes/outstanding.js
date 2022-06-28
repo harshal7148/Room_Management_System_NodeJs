@@ -4,17 +4,29 @@ const Outstanding = require('../models/outstanding');
 const tenant = require('../models/tenant');
 
 router.get('', async(req, res) => {
-    let details = [];
+    let outstandingModel = [];
     Outstanding.find({}).then(async results => {
         for(const element of results){
             await tenant.findOne({ _id: element.tenantId }).then(data => {
-                details.push({
+                outstandingModel.push({
                     name: data.name,
-                    amount: element.amount
+                    amount: element.amount,
+                    details: [
+                        {
+                            fromDate: "28/05/2022",
+                            toDate: "28/05/2022",
+                            outstandingAmount: 5000
+                        },
+                        {
+                            fromDate: "29/05/2022",
+                            toDate: "29/05/2022",
+                            outstandingAmount: 5000
+                        }
+                    ]
                 })
             });
         }
-        res.json(details);
+        res.json(outstandingModel);
     })
 });
 
