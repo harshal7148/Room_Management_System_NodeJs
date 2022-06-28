@@ -1,21 +1,17 @@
 const express = require('express');
-const app = express();
-const Tenant = require('../models/tenant');
+const router = express.Router();
 // Parser
 const bodyParser = require('body-parser');
 let jsonParser = bodyParser.json();
-// Connection String
+// Model reference
+const Tenant = require('../models/tenant');
 const mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://Harshal:C9I9FqPUb0vPsejN@cluster0.imc6gc6.mongodb.net/RoomSystem?retryWrites=true&w=majority').then(()=>{
-    console.warn("db connected");
-})
 
 // API's Creation
 /* Post API */
-app.post('/tenants', jsonParser, function (req, res) {
-    //res.set('Access-Control-Allow-Origin', '*');
+router.post('', jsonParser, function (req, res) {
     const data = new Tenant({
-        _id: "1565665665",
+        _id: mongoose.Types.ObjectId(),
         name: req.body.name,
         address: req.body.address,
         uin: req.body.uin,
@@ -25,13 +21,14 @@ app.post('/tenants', jsonParser, function (req, res) {
         isActive: req.body.isActive,
     })
     data.save().then(() => {
-        res.status(500).send('testing');
+        res.status(201).json(data);
     }).catch((error) => {
-        //res.status(400).json(error)
+        return res.status(500).send({ message: error.message });
     })
     
 })
 
-app.listen(3000);
+module.exports = router;
+
 
 
