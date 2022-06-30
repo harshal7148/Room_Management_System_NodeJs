@@ -2,54 +2,50 @@ const express = require('express');
 const router = express.Router();
 const Outstanding = require('../models/outstanding');
 const tenant = require('../models/tenant');
-
-// router.get('', async(req, res) => {
-//     let outstandingModel = [];
-//     Outstanding.find({}).then(async results => {
-//         for (const element of results) {
-//             await tenant.findOne({ _id: element.tenantId }).then(data => {
-//                 outstandingModel.push({
-//                     name: data.name,
-//                     amount: element.amount,
-//                     details: [{
-//                             fromDate: "28/05/2022",
-//                             toDate: "28/05/2022",
-//                             outstandingAmount: 5000
-//                         },
-//                         {
-//                             fromDate: "29/05/2022",
-//                             toDate: "29/05/2022",
-//                             outstandingAmount: 5000
-//                         }
-//                     ]
-//                 })
-//             });
-//         }
-//         res.json(outstandingModel);
-//     })
-// });
+const outstandingHistory = require("../models/outstandingHistory")
 
 router.get('', (req, res) => {
+    calcNextMonthDate();
     Outstanding.find()
         .populate("tenantId")
-        .then(data => res.json(data))
+        .then(data => res.status(200).json(data))
         .catch(error => console.log(error));
 });
 
-module.exports = router;
+router.get('/history/:ownerId', (req, res) => {
+    outstandingHistory.find({ ownerId: req.params.ownerId })
+        // .populate(req.params.ownerId.toString())
+        .populate({ path: 'tenantId', select: ['name', 'profilePic', 'rentStartDate'] })
+        .then(data => {
+            console.log(data)
+            data.forEach(item => {
+                const obj = calcNextMonthDate(item.tenantId.rentStartDate);
+                if (obj.isValid) {
+                    item.histories[0].paidAmount = "5000";
+                    item.histories[0].fromDate = item.tenantId.rentStartDate;
+                    item.histories[0].toDate = obj.nextDate;
+                } else {
+                    item.histories[0].paidAmount = "0";
+                }
+            });
+            // const value = calcNextMonthDate(data.tenantId.rentStartDate);
+            res.status(200).json(data)
+        })
+        .catch(error => console.log(error));
+});
 
-// [
-//     {
-//     roomNo: 'sd',
-//     amount: '34',
-//     name: 'xzxz',
-//     profilePic: 'sdsad',
-//     details: [ 
-//         {
-//             fromDate: date,
-//     toDate: date,
-//     amount: '223
-//     }
-//         ]
-//     }
-//     ]
+function calcNextMonthDate(date) {
+    // date = 1653849001000;
+    const nextDate = date + 30 * 86400000;
+    const currDate = new Date();
+    const currDateMili = currDate.setHours(0, 0, 0, 0);
+
+    const day = (currDateMili - nextDate);
+
+    const days = Math.floor(day / (24 * 60 * 60 * 1000));
+    console.log(days)
+    const isInc = days === 0 ? true : false;
+    return { isValid: isInc, nextDate: nextDate };
+}
+
+module.exports = router;
