@@ -3,6 +3,7 @@ const router = express.Router();
 const Outstanding = require('../models/outstanding');
 const tenant = require('../models/tenant');
 const outstandingHistory = require("../models/outstandingHistory")
+const mongoose = require('mongoose');
 
 router.get('', (req, res) => {
     calcNextMonthDate();
@@ -47,5 +48,58 @@ function calcNextMonthDate(date) {
     const isInc = days === 0 ? true : false;
     return { isValid: isInc, nextDate: nextDate };
 }
+
+router.post('/calculateOutstanding', (req, res) => {
+    outstandingHistory.findOne({ tenantId: '62b9985817687f39b4d484f7' }).
+        then(oustandingRes => {
+            if (oustandingRes === null) {
+                tenant.findOne({ _id: '62b9985817687f39b4d484f7' }).then(
+                    response => {
+                        const result = calcNextMonthDate(response.rentStartDate)
+                        if (result.isValid) {
+                            const data = new outstandingHistory({
+                                _id: mongoose.Types.ObjectId(),
+                                ownerId: '62b15c7f15327f43f5a14621',
+                                tenantId: '62b9985817687f39b4d484f7',
+                                histories: [
+                                    {
+                                        fromDate: response.rentStartDate,
+                                        toDate: result.nextDate,
+                                        isPaid: false,
+                                        paidAmount: '5000',
+                                    }
+                                ]
+                            })
+                            data.save().then(() => {
+                                console.log("data",data);
+                                res.status(201).json(data);
+                            }).catch((error) => {
+                                return res.status(500).send({ message: error.message });
+                            })
+                        }
+                    }
+                )
+            }
+            else{
+                console.log("else")
+                outstandingHistory.find({tenantId : '62b9985817687f39b4d484f7'}).then((res)=>{
+                    res['histories'].forEach(obj=>{
+                        console.log(obj)
+                    });
+
+                    const result =  calcNextMonthDate(res.histories[res.histories.length - 1].toDate)
+                    if(result.isValid){
+                        const history =  res.histories.push({
+                            fromDate: res.toDate,
+                            toDate: result.nextDate,
+                            isPaid: false,
+                            paidAmount: "5000"
+                        })
+                        outstandingHistory.updateOne({_id: '62c2aaddd800225f65e890bd'}, {$set :{histories:history}})
+                    }
+                })
+            }
+        })
+})
 
 module.exports = router;
