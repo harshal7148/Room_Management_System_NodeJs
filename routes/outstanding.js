@@ -49,6 +49,7 @@ function calcNextMonthDate(date) {
     return { isValid: isInc, nextDate: nextDate };
 }
 
+
 router.post('/calculateOutstanding', (req, res) => {
     outstandingHistory.findOne({ tenantId: '62b9985817687f39b4d484f7' }).
         then(oustandingRes => {
