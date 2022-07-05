@@ -8,7 +8,6 @@ const loginRoutes = require('./routes/login');
 const outstandingRoutes = require('./routes/outstanding');
 const tenantRoutes = require('./routes/tenant')
 
-
 app.use(bodyParser.json());
 
 app.use("/login", loginRoutes);
