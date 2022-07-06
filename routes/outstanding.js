@@ -5,6 +5,8 @@ const tenant = require('../models/tenant');
 const outstandingHistory = require("../models/outstandingHistory")
 const mongoose = require('mongoose');
 
+
+
 router.get('', (req, res) => {
     calcNextMonthDate();
     Outstanding.find()
@@ -36,32 +38,33 @@ router.get('/history/:ownerId', (req, res) => {
 });
 
 function calcNextMonthDate(date) {
-    // date = 1653849001000;
-    const nextDate = date + 30 * 86400000;
+    // current date
     const currDate = new Date();
     const currDateMili = currDate.setHours(0, 0, 0, 0);
-
-    const day = (currDateMili - nextDate);
-
-    const days = Math.floor(day / (24 * 60 * 60 * 1000));
-    console.log(days)
-    const isInc = days === 0 ? true : false;
-    return { isValid: isInc, nextDate: nextDate };
+    // calculate oustanding date
+    var outstandingDate = new Date(+ date);
+    outstandingDate.setDate(outstandingDate.getDate() + 30);
+    var nextDate = outstandingDate.getTime();
+    // calculate days of diff between current date and next month date
+    const dayInMilli = (currDateMili - nextDate);
+    const diffDays = Math.floor(dayInMilli / (1000 * 3600 * 24));
+    // Return true -> If diffDays is 0 & greater than 0 , else false ('-')
+    const isDue = diffDays >= 0 ? true : false;
+    return { isValid: isDue, nextDate: nextDate };
 }
 
-
-router.post('/calculateOutstanding', (req, res) => {
-    outstandingHistory.findOne({ tenantId: '62b9985817687f39b4d484f7' }).
-        then(oustandingRes => {
-            if (oustandingRes === null) {
-                tenant.findOne({ _id: '62b9985817687f39b4d484f7' }).then(
-                    response => {
+router.post('/calculateOutstanding/:ownerId', (req, res) => {
+    tenant.find({}).then(tenant => {
+        tenant.forEach(response => {
+            outstandingHistory.findOne({ tenantId: response._id }).
+                then(oustandingRes => {
+                    if (oustandingRes === null) {
                         const result = calcNextMonthDate(response.rentStartDate)
                         if (result.isValid) {
                             const data = new outstandingHistory({
                                 _id: mongoose.Types.ObjectId(),
-                                ownerId: '62b15c7f15327f43f5a14621',
-                                tenantId: '62b9985817687f39b4d484f7',
+                                ownerId: req.params.ownerId,
+                                tenantId: response._id,
                                 histories: [
                                     {
                                         fromDate: response.rentStartDate,
@@ -72,35 +75,36 @@ router.post('/calculateOutstanding', (req, res) => {
                                 ]
                             })
                             data.save().then(() => {
-                                console.log("data",data);
-                                res.status(201).json(data);
-                            }).catch((error) => {
-                                return res.status(500).send({ message: error.message });
                             })
+                                .catch((error) => {
+                                    return res.status(500).send({ message: error.message });
+                                })
                         }
                     }
-                )
-            }
-            else{
-                console.log("else")
-                outstandingHistory.find({tenantId : '62b9985817687f39b4d484f7'}).then((res)=>{
-                    res['histories'].forEach(obj=>{
-                        console.log(obj)
-                    });
-
-                    const result =  calcNextMonthDate(res.histories[res.histories.length - 1].toDate)
-                    if(result.isValid){
-                        const history =  res.histories.push({
-                            fromDate: res.toDate,
-                            toDate: result.nextDate,
-                            isPaid: false,
-                            paidAmount: "5000"
+                    else {
+                        outstandingHistory.find({ tenantId: response._id }).then((response) => {
+                            const result = calcNextMonthDate(response[0].histories[response[0].histories.length - 1].toDate)
+                            if (result.isValid) {
+                                response[0].histories.push({
+                                    fromDate: response[0].histories[response[0].histories.length - 1].toDate,
+                                    toDate: result.nextDate,
+                                    isPaid: false,
+                                    paidAmount: "5000"
+                                })
+                                outstandingHistory.updateOne({ _id: oustandingRes._id }, {
+                                    $set: {
+                                        histories: response[0].histories
+                                    }
+                                }).then(
+                                )
+                            }
                         })
-                        outstandingHistory.updateOne({_id: '62c2aaddd800225f65e890bd'}, {$set :{histories:history}})
                     }
                 })
-            }
         })
+        res.end("Inserted Sucesfully");
+    })
+
 })
 
 module.exports = router;
