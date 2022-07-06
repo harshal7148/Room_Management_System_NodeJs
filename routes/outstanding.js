@@ -4,8 +4,7 @@ const Outstanding = require('../models/outstanding');
 const tenant = require('../models/tenant');
 const outstandingHistory = require("../models/outstandingHistory")
 const mongoose = require('mongoose');
-
-
+const stringUtil = require('../commonFunction/stringUtil');
 
 router.get('', (req, res) => {
     calcNextMonthDate();
@@ -40,6 +39,7 @@ router.get('/history/:ownerId', (req, res) => {
 function calcNextMonthDate(date) {
     // current date
     const currDate = new Date();
+    // removing time from currDate
     const currDateMili = currDate.setHours(0, 0, 0, 0);
     // calculate oustanding date
     var outstandingDate = new Date(+ date);
@@ -58,7 +58,7 @@ router.post('/calculateOutstanding/:ownerId', (req, res) => {
         tenant.forEach(response => {
             outstandingHistory.findOne({ tenantId: response._id }).
                 then(oustandingRes => {
-                    if (oustandingRes === null) {
+                    if (stringUtil.isNullorEmpty(oustandingRes)) {
                         const result = calcNextMonthDate(response.rentStartDate)
                         if (result.isValid) {
                             const data = new outstandingHistory({
