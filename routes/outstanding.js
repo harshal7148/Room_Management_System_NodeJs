@@ -5,6 +5,8 @@ const tenant = require('../models/tenant');
 const outstandingHistory = require("../models/outstandingHistory")
 const mongoose = require('mongoose');
 const stringUtil = require('../commonFunction/stringUtil');
+const dateUtil = require('../commonFunction/dateUtil');
+
 
 router.get('', (req, res) => {
     calcNextMonthDate();
@@ -14,44 +16,15 @@ router.get('', (req, res) => {
         .catch(error => console.log(error));
 });
 
-router.get('/history/:ownerId', (req, res) => {
-    outstandingHistory.find({ ownerId: req.params.ownerId })
-        // .populate(req.params.ownerId.toString())
-        .populate({ path: 'tenantId', select: ['name', 'profilePic', 'rentStartDate'] })
-        .then(data => {
-            console.log(data)
-            data.forEach(item => {
-                const obj = calcNextMonthDate(item.tenantId.rentStartDate);
-                if (obj.isValid) {
-                    item.histories[0].paidAmount = "5000";
-                    item.histories[0].fromDate = item.tenantId.rentStartDate;
-                    item.histories[0].toDate = obj.nextDate;
-                } else {
-                    item.histories[0].paidAmount = "0";
-                }
-            });
-            // const value = calcNextMonthDate(data.tenantId.rentStartDate);
-            res.status(200).json(data)
-        })
-        .catch(error => console.log(error));
+router.get('/getOutstandingHistory/:ownerId', (req, res) => {
+    outstandingHistory.find({}).
+    populate('tenantId', select = ['name','profilePic'])
+    .then(outsandingHistories => {
+        res.status(201).json(outsandingHistories);
+    }).catch(err => {
+        return res.status(500).send({ message: err.message });
+    })
 });
-
-function calcNextMonthDate(date) {
-    // current date
-    const currDate = new Date();
-    // removing time from currDate
-    const currDateMili = currDate.setHours(0, 0, 0, 0);
-    // calculate oustanding date
-    var outstandingDate = new Date(+ date);
-    outstandingDate.setDate(outstandingDate.getDate() + 30);
-    var nextDate = outstandingDate.getTime();
-    // calculate days of diff between current date and next month date
-    const dayInMilli = (currDateMili - nextDate);
-    const diffDays = Math.floor(dayInMilli / (1000 * 3600 * 24));
-    // Return true -> If diffDays is 0 & greater than 0 , else false ('-')
-    const isDue = diffDays >= 0 ? true : false;
-    return { isValid: isDue, nextDate: nextDate };
-}
 
 router.post('/calculateOutstanding/:ownerId', (req, res) => {
     tenant.find({}).then(tenant => {
@@ -59,7 +32,7 @@ router.post('/calculateOutstanding/:ownerId', (req, res) => {
             outstandingHistory.findOne({ tenantId: response._id }).
                 then(oustandingRes => {
                     if (stringUtil.isNullorEmpty(oustandingRes)) {
-                        const result = calcNextMonthDate(response.rentStartDate)
+                        const result = dateUtil.calcNextMonthDate(response.rentStartDate,30)
                         if (result.isValid) {
                             const data = new outstandingHistory({
                                 _id: mongoose.Types.ObjectId(),
