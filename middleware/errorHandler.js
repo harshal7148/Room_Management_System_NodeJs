@@ -1,5 +1,4 @@
 function errorHandler(error, req, res, next) {
-    console.log(error)
     error.status = error.status || 500;
     res.json({
         error: {
