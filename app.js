@@ -9,9 +9,18 @@ const outstandingRoutes = require('./routes/outstanding');
 const tenantRoutes = require('./routes/tenant')
 
 app.use(bodyParser.json());
-
+// routes
 app.use("/login", loginRoutes);
 app.use("/outstanding", outstandingRoutes);
 app.use("/tenants", tenantRoutes);
+
+// error Handling
+app.use((req,res,next) =>{
+    res.status(404).json({
+        error : "URL Not Found" 
+    })
+})
+
+
 
 app.listen(process.env.PORT);

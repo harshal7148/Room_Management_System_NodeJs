@@ -9,7 +9,7 @@ const dateUtil = require('../commonFunction/dateUtil');
 
 
 router.get('', (req, res) => {
-    calcNextMonthDate();
+    //calcNextMonthDate();
     Outstanding.find()
         .populate("tenantId")
         .then(data => res.status(200).json(data))

@@ -20,8 +20,8 @@ router.post('/addTenant/:ownerId', function(req, res) {
         isActive: req.body.isActive,
         ownerId: req.params.ownerId
     })
-    data.save().then((res1) => {
-        res.status(201).json(res1);
+    data.save().then((response) => {
+        res.status(201).json(response);
     }).catch((error) => {
         return res.status(500).send({ message: error.message });
     })
@@ -41,8 +41,8 @@ router.put('/updateTenant/:tenantId/:ownerId' , function(req,res) {
         ownerId: req.params.ownerId
     })
 
-    Tenant.updateOne({_id:req.params.tenantId},data).then((res1) => {
-        res.status(201).json(res1);
+    Tenant.updateOne({_id:req.params.tenantId},data).then((response) => {
+        res.status(201).json(response);
     }).catch((error) => {
         return res.status(500).send({ message: error.message });
     })
@@ -50,8 +50,8 @@ router.put('/updateTenant/:tenantId/:ownerId' , function(req,res) {
 
 /* Delete API - Delete Tenant */
 router.delete('/deleteTenant/:tenantId/:ownerId' , function(req,res) {
-    Tenant.deleteOne({_id:req.params.tenantId,ownerId: req.params.ownerId}).then((res1) => {
-        res.status(201).json(res1);
+    Tenant.deleteOne({_id:req.params.tenantId,ownerId: req.params.ownerId}).then((response) => {
+        res.status(201).json(response);
     }).catch((error) => {
         return res.status(500).send({ message: error.message });
     })
