@@ -2,17 +2,18 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const owner = require("../models/owner");
+const errorMessages = require("../errorMessages/messages");
 
 //
 const jwt = require('jsonwebtoken');
 jwtKey = "jwt";
 //
 
-router.post('', async(req, res) => {
+router.post('', async (req, res, next) => {
     try {
         const data = await owner.findOne({ name: req.body.name });
         if (!data) {
-            return res.status(404).send({ message: "User Not found." });
+            throw new Error("userNotFound");
         }
         var decipher = crypto.createDecipher(process.env.ALGO, process.env.KEY);
         var decrypted = decipher.update(data.password, 'hex', 'utf8') + decipher.final('utf8');
@@ -21,10 +22,10 @@ router.post('', async(req, res) => {
                 res.status(201).json({ token });
             })
         } else {
-            res.status(401).json("Password not match")
+            throw new Error("passNotMatched");
         }
     } catch (error) {
-        return res.status(500).send({ message: error.message });
+        next({ status: errorMessages[error.message]?.status, message: errorMessages[error.message]?.message });
     }
 });
 
