@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 const loginRoutes = require('./routes/login');
 const outstandingRoutes = require('./routes/outstanding');
 const tenantRoutes = require('./routes/tenant');
+// const imagesRoutes = require('./routes/commonRoutes/image');
+
 const errorHandler = require('./middleware/errorHandler');
 const auth = require('./middleware/auth');
 
@@ -27,11 +29,12 @@ app.use((req, res, next) => {
     next();
 });
 
-
+app.use(express.static('upload'))
 app.use("/login", loginRoutes);
-app.use(auth);
+//app.use(auth);
 app.use("/outstanding", outstandingRoutes);
 app.use("/tenants", tenantRoutes);
+// app.use("/images", imagesRoutes);
 
 app.use((req, res, next) => {
     const error = new Error('Not Found!');
