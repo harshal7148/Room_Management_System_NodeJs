@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 // Model reference
-const Tenant = require('../models/tenant');
 const mongoose = require('mongoose');
+const Tenant = require('../models/tenant');
+const imagesRoutes = require('./commonRoutes/image');
 
-//const imagesRoutes = require('./commonRoutes/image');
 
-// multer
+
+//multer
 var multer = require("multer");
+const { func } = require('@hapi/joi');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './upload')
@@ -16,48 +18,62 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + '_' + file.originalname);
     }
 })
-
-const upload = multer({
+var upload = multer({
     storage: storage,
     limits: {
-        // Setting Image Size Limit to 1MBs
-        fileSize: 1000000,
+        // Setting Image Size Limit to 2MBs
+        fileSize: 2000000
     },
     fileFilter(req, file, cb) {
         if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
             //Error 
-            cb(new Error('Please upload JPG,JPEG and PNG images only!'))
-            return next(error)
+            cb(new Error('Please upload JPG and PNG images only!'))
         }
         //Success 
         cb(undefined, true)
     }
 })
 
-
-
 // API's Creation
 /* Post API - Add Tenant */
-router.post('/addTenant/:ownerId', upload.single('profilePic'), function(req, res) {
-    console.log(req.file);
+
+router.post('/addTenant/:ownerId', upload.single('file'), function(req, res) {
+    console.log("body",req.body);
+    req.body = req.body.params;
+    //console.log("body",req.body);
+
     const data = new Tenant({
         _id: mongoose.Types.ObjectId(),
         roomNo: req.body.roomNo,
         name: req.body.name,
         address: req.body.address,
         uin: req.body.uin,
-        profilePic: req.file.path,
+        profilePic: req.body.path,
         rentStartDate: req.body.rentStartDate,
         depositAmount: req.body.depositAmount,
         isActive: req.body.isActive,
         ownerId: req.params.ownerId
     })
     data.save().then((response) => {
-        res.status(201).json(response);
+        return res.status(201).json({
+            success : 1,
+            message : "Tenant saved successfully"
+        });
+
     }).catch((error) => {
+        console.log("str",error)
         return res.status(500).send({ message: error.message });
     })
-})
+},
+    // multer Error Handling
+    (error, req, res, next) => {
+        console.log("str1", error);
+        next(res.status(400).send({
+            message: error.message
+        }))
+    }
+    );
+
 
 /* Put API - Update Tenant */
 router.put('/updateTenant/:tenantId/:ownerId' , function(req,res) {
@@ -88,10 +104,5 @@ router.delete('/deleteTenant/:tenantId/:ownerId' , function(req,res) {
         return res.status(500).send({ message: error.message });
     })
 })
-
-  router.get('/images/:path',function(req,res) {
-    //console.log(req);
-    res.download('./upload/' + req.params.path)
-  })
 
 module.exports = router;
