@@ -29,12 +29,18 @@ app.use((req, res, next) => {
     next();
 });
 
+
 app.use(express.static('upload'))
 app.use("/login", loginRoutes);
 //app.use(auth);
 app.use("/outstanding", outstandingRoutes);
-app.use("/tenants", tenantRoutes);
-// app.use("/images", imagesRoutes);
+
+const formidable = require('formidable');
+
+
+const {addTenantValidation} = require('./Validation/tenant/tenant.validation')
+app.use("/tenants", addTenantValidation, tenantRoutes)
+
 
 app.use((req, res, next) => {
     const error = new Error('Not Found!');
