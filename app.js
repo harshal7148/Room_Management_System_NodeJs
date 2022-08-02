@@ -35,11 +35,11 @@ app.use("/login", loginRoutes);
 //app.use(auth);
 app.use("/outstanding", outstandingRoutes);
 
-const formidable = require('formidable');
+// const formidable = require('formidable');
 
 
-const {addTenantValidation} = require('./Validation/tenant/tenant.validation')
-app.use("/tenants", addTenantValidation, tenantRoutes)
+//const {addTenantValidation} = require('./Validation/tenant/tenant.validation')
+app.use("/tenants", tenantRoutes);
 
 
 app.use((req, res, next) => {

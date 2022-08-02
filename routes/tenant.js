@@ -5,8 +5,6 @@ const mongoose = require('mongoose');
 const Tenant = require('../models/tenant');
 const imagesRoutes = require('./commonRoutes/image');
 
-
-
 //multer
 var multer = require("multer");
 const { func } = require('@hapi/joi');
@@ -15,7 +13,7 @@ const storage = multer.diskStorage({
         cb(null, './upload')
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '_' + file.originalname);
+        cb(null,file.originalname);
     }
 })
 var upload = multer({
@@ -35,11 +33,19 @@ var upload = multer({
 })
 
 // API's Creation
-/* Post API - Add Tenant */
 
+/* Get API - Get Tenant */
+router.get('/getTenant/:ownerId', (req, res) => {
+    // calcNextMonthDate();
+    Tenant.find()
+        .then(data => res.status(200).json(data))
+        .catch(error => console.log(error));
+});
+
+/* Post API - Add Tenant */
 router.post('/addTenant/:ownerId', upload.single('file'), function(req, res) {
+    //req.body = req.body.params;
     console.log("body",req.body);
-    req.body = req.body.params;
     //console.log("body",req.body);
 
     const data = new Tenant({
@@ -48,7 +54,7 @@ router.post('/addTenant/:ownerId', upload.single('file'), function(req, res) {
         name: req.body.name,
         address: req.body.address,
         uin: req.body.uin,
-        profilePic: req.body.path,
+        profilePic: req.body.profilePic,
         rentStartDate: req.body.rentStartDate,
         depositAmount: req.body.depositAmount,
         isActive: req.body.isActive,
@@ -104,5 +110,7 @@ router.delete('/deleteTenant/:tenantId/:ownerId' , function(req,res) {
         return res.status(500).send({ message: error.message });
     })
 })
+
+
 
 module.exports = router;
