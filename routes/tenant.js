@@ -63,7 +63,8 @@ router.post('/addTenant/:ownerId', upload.single('file'), function(req, res) {
     data.save().then((response) => {
         return res.status(201).json({
             success : 1,
-            message : "Tenant saved successfully"
+            message : "Tenant saved successfully",
+            data : data
         });
 
     }).catch((error) => {
@@ -82,8 +83,10 @@ router.post('/addTenant/:ownerId', upload.single('file'), function(req, res) {
 
 
 /* Put API - Update Tenant */
-router.put('/updateTenant/:tenantId/:ownerId' , function(req,res) {
+router.put('/updateTenant/:tenantId/:ownerId', upload.single('file'), function(req,res) {
+    console.log("body",req.body);
     const data = new Tenant({
+        _id : req.params.tenantId,
         roomNo: req.body.roomNo,
         name: req.body.name,
         address: req.body.address,
@@ -96,7 +99,11 @@ router.put('/updateTenant/:tenantId/:ownerId' , function(req,res) {
     })
 
     Tenant.updateOne({_id:req.params.tenantId},data).then((response) => {
-        res.status(201).json(response);
+        return res.status(200).json({
+            success : 1,
+            message : "Tenant Updated successfully",
+            data : data
+        });
     }).catch((error) => {
         return res.status(500).send({ message: error.message });
     })
