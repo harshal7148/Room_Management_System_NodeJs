@@ -1,7 +1,7 @@
 module.exports = {
     userNotFound: {
         status: 404,
-        message: "Not Found!"
+        message: "User not found!"
     },
     passNotMatched: {
         status: 401,

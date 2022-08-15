@@ -15,14 +15,16 @@ router.post('', async (req, res, next) => {
         if (!data) {
             throw new Error("userNotFound");
         }
-        var decipher = crypto.createDecipher(process.env.ALGO, process.env.KEY);
-        var decrypted = decipher.update(data.password, 'hex', 'utf8') + decipher.final('utf8');
-        if (decrypted === req.body.password && req.body.name === data.name) {
-            jwt.sign({ data }, jwtKey, { expiresIn: '300s' }, (err, token) => {
-                res.status(201).json({ token });
-            })
-        } else {
-            throw new Error("passNotMatched");
+        else {
+            var decipher = crypto.createDecipher(process.env.ALGO, process.env.KEY);
+            var decrypted = decipher.update(data.password, 'hex', 'utf8') + decipher.final('utf8');
+            if (decrypted === req.body.password && req.body.name === data.name) {
+                jwt.sign({ data }, jwtKey, { expiresIn: '300s' }, (err, token) => {
+                    res.status(201).json({ token, data: data._id });
+                })
+            } else {
+                throw new Error("passNotMatched");
+            }
         }
     } catch (error) {
         next({ status: errorMessages[error.message]?.status, message: errorMessages[error.message]?.message });
